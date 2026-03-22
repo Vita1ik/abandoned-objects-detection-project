@@ -1,12 +1,13 @@
-video_source: 0
+video_source: "data/raw/test_videos/test2.mp4"
 window_title: "Abandoned Object System - MSc Thesis Project"
 
 detector:
   family: yolov8
   variant: baseline
-  weights_path: yolov8n.pt
+  weights_path: yolov8m.pt
   confidence: 0.25
   iou: 0.45
+  image_size: 640
   tracker: bytetrack.yaml
   persist_tracking: true
   device: cpu

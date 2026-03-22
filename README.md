@@ -4,7 +4,7 @@ This project is a diploma-oriented computer vision system for abandoned object d
 
 The current thesis logic is based on three model groups:
 
-- `YOLOv8n pretrained baseline`
+- `YOLOv8s pretrained baseline`
 - `YOLOv8 + MobileNetV3`
 - `YOLOv8 + MobileNetV4`
 
@@ -90,10 +90,10 @@ Current default runtime configuration:
 detector:
   family: yolov8
   variant: baseline
-  weights_path: yolov8n.pt
+  weights_path: yolov8s.pt
 ```
 
-This means the application uses `yolov8n.pt` as the default pretrained baseline, which is a reasonable choice for edge-oriented and resource-constrained deployment scenarios.
+This means the application uses `yolov8s.pt` as the default pretrained baseline, giving better detection quality while still remaining practical for constrained deployment scenarios.
 
 ## Configuration
 
@@ -111,6 +111,7 @@ detector:
   weights_path: artifacts/weights/yolov8_mobilenetv3.pt
   confidence: 0.25
   iou: 0.45
+  image_size: 640
   tracker: bytetrack.yaml
   persist_tracking: true
   device: cpu
@@ -126,6 +127,7 @@ logic:
 - `video_source` - webcam index or path to a video file.
 - `detector.variant` - active model configuration: `baseline`, `mobilenetv3`, or `mobilenetv4`.
 - `detector.weights_path` - path to the selected model weights.
+- `detector.image_size` - inference image size; larger values usually improve small-object detection but reduce FPS.
 - `logic.abandon_threshold` - time in seconds before an unattended object is considered abandoned.
 - `logic.dist_threshold` - distance threshold used to associate a nearby person with an item.
 
@@ -135,7 +137,7 @@ This project is structured for a fair thesis comparison of lightweight `YOLOv8`-
 
 The recommended setup is:
 
-1. Use `YOLOv8n pretrained` as the official baseline model.
+1. Use `YOLOv8s pretrained` as the official baseline model.
 2. Implement and train `YOLOv8 + MobileNetV3`.
 3. Implement and train `YOLOv8 + MobileNetV4`.
 4. Evaluate all models on the same dataset split and under the same runtime conditions.
@@ -196,7 +198,7 @@ At the moment, this script validates whether each model configuration is ready t
 
 The current baseline model is:
 
-- `yolov8n.pt` - official pretrained YOLOv8n weights
+- `yolov8s.pt` - official pretrained YOLOv8s weights
 
 For the full thesis comparison, you should additionally prepare custom trained weights for:
 
@@ -245,4 +247,4 @@ to another device index such as `1`, or use a video file path instead.
 
 ## Thesis Note
 
-This repository intentionally uses `YOLOv8` as the research base, because it remains highly relevant, is well supported in practice, and is suitable for controlled backbone-level experimentation. The `YOLOv8n` pretrained model is used as the official lightweight baseline for comparison on constrained devices.
+This repository intentionally uses `YOLOv8` as the research base, because it remains highly relevant, is well supported in practice, and is suitable for controlled backbone-level experimentation. The `YOLOv8s` pretrained model is used as the official baseline because it offers a better accuracy-to-efficiency balance for this project.

@@ -2,5 +2,5 @@ name: yolov8_baseline_pretrained
 family: yolov8
 variant: baseline
 backbone: standard
-weights_path: yolov8n.pt
-notes: Official pretrained YOLOv8n baseline selected for resource-constrained deployment.
+weights_path: yolov8s.pt
+notes: Official pretrained YOLOv8s baseline selected as a stronger reference model for constrained deployment.
