@@ -3,8 +3,8 @@ window_title: "Abandoned Object System - MSc Thesis Project"
 
 detector:
   family: yolov8
-  variant: default
-  weights_path: yolo11n.pt
+  variant: baseline
+  weights_path: yolov8n.pt
   confidence: 0.25
   iou: 0.45
   tracker: bytetrack.yaml

@@ -1,6 +1,0 @@
-name: yolov8_default
-family: yolov8
-variant: default
-backbone: standard
-weights_path: artifacts/weights/yolov8_default.pt
-notes: Baseline YOLOv8 model for thesis comparison.

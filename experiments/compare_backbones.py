@@ -11,7 +11,7 @@ from src.detectors.factory import build_detector
 
 
 MODEL_CONFIGS = [
-    Path("configs/models/yolov8_default.yaml"),
+    Path("configs/models/yolov8_baseline.yaml"),
     Path("configs/models/yolov8_mobilenetv3.yaml"),
     Path("configs/models/yolov8_mobilenetv4.yaml"),
 ]

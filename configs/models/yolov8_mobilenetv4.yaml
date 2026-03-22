@@ -3,4 +3,4 @@ family: yolov8
 variant: mobilenetv4
 backbone: mobilenetv4
 weights_path: artifacts/weights/yolov8_mobilenetv4.pt
-notes: YOLOv8 variant retrained with a MobileNetV4 backbone for the thesis comparison.
+notes: Custom YOLOv8 variant with a MobileNetV4 backbone for the thesis comparison.

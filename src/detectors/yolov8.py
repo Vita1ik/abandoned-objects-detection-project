@@ -10,10 +10,10 @@ from src.domain import Detection
 
 
 MODEL_VARIANTS = {
-    "default": {
-        "description": "Baseline YOLOv8 model with the standard Ultralytics backbone.",
-        "weights_path": "artifacts/weights/yolov8_default.pt",
-        "thesis_role": "reference baseline",
+    "baseline": {
+        "description": "Official pretrained YOLOv8n baseline with the standard Ultralytics backbone.",
+        "weights_path": "yolov8n.pt",
+        "thesis_role": "resource-efficient pretrained baseline",
     },
     "mobilenetv3": {
         "description": "YOLOv8 detector with a MobileNetV3 backbone trained separately for comparison.",
@@ -38,14 +38,7 @@ class YoloV8Detector(BaseDetector):
                 f"Unsupported YOLOv8 variant '{config.variant}'. Supported variants: {supported}"
             )
 
-        weights_path = Path(config.weights_path or MODEL_VARIANTS[self.variant]["weights_path"])
-        if not weights_path.exists():
-            raise FileNotFoundError(
-                f"Model weights for variant '{self.variant}' were not found at '{weights_path}'. "
-                "Place the trained weights there or set detector.weights_path in config.yaml."
-            )
-
-        self.model = YOLO(str(weights_path))
+        self.model = YOLO(self._resolve_model_source(config))
         self.target_classes = set(config.target_classes)
 
     def detect_and_track(self, frame) -> list[dict]:
@@ -86,3 +79,20 @@ class YoloV8Detector(BaseDetector):
             detections.append(detection.as_dict())
 
         return detections
+
+    def _resolve_model_source(self, config: DetectorConfig) -> str:
+        requested_source = config.weights_path or MODEL_VARIANTS[self.variant]["weights_path"]
+        weights_path = Path(requested_source)
+
+        if weights_path.exists():
+            return str(weights_path)
+
+        # For the official YOLOv8n baseline, allow Ultralytics to resolve/download
+        # the pretrained model by name even if it is not present locally yet.
+        if self.variant == "baseline" and requested_source == "yolov8n.pt":
+            return requested_source
+
+        raise FileNotFoundError(
+            f"Model weights for variant '{self.variant}' were not found at '{requested_source}'. "
+            "Place the trained weights there or set detector.weights_path in config.yaml."
+        )

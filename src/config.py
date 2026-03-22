@@ -10,7 +10,7 @@ import yaml
 @dataclass(slots=True)
 class DetectorConfig:
     family: str = "yolov8"
-    variant: str = "default"
+    variant: str = "baseline"
     weights_path: str | None = None
     confidence: float = 0.25
     iou: float = 0.45
@@ -58,7 +58,7 @@ def load_app_config(path: str | Path) -> AppConfig:
 def _parse_detector_config(raw: dict[str, Any]) -> DetectorConfig:
     return DetectorConfig(
         family=raw.get("family", "yolov8"),
-        variant=raw.get("variant", "default"),
+        variant=raw.get("variant", "baseline"),
         weights_path=raw.get("weights_path"),
         confidence=float(raw.get("confidence", 0.25)),
         iou=float(raw.get("iou", 0.45)),

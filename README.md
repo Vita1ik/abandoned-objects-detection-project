@@ -1,10 +1,12 @@
 # Abandoned Objects Detection Project
 
-This project is a diploma-oriented computer vision system for abandoned object detection in video streams. It is designed not only as a demo application, but also as an experimental framework for comparing `YOLOv8` with different backbones:
+This project is a diploma-oriented computer vision system for abandoned object detection in video streams. It is designed not only as a demo application, but also as an experimental framework for comparing `YOLOv8` with different backbone choices for resource-constrained devices.
 
-- `YOLOv8 + default backbone`
-- `YOLOv8 + MobileNetV3 backbone`
-- `YOLOv8 + MobileNetV4 backbone`
+The current thesis logic is based on three model groups:
+
+- `YOLOv8n pretrained baseline`
+- `YOLOv8 + MobileNetV3`
+- `YOLOv8 + MobileNetV4`
 
 The repository includes a unified runtime pipeline, configurable detector selection, abandoned-object logic, visualization utilities, and a scaffold for backbone comparison experiments.
 
@@ -15,7 +17,7 @@ The main goals of this project are:
 - detect people and personal items in a video stream;
 - track objects across frames;
 - determine whether an item is attended, unattended, or abandoned;
-- compare the performance of `YOLOv8` with different backbone architectures under the same evaluation setup.
+- compare lightweight `YOLOv8`-based models for deployment on devices with limited computational resources.
 
 ## Project Structure
 
@@ -43,7 +45,7 @@ The main goals of this project are:
 
 - `main.py` - application entry point.
 - `config.yaml` - runtime configuration for inference.
-- `configs/models/` - experiment descriptors for each YOLOv8 variant.
+- `configs/models/` - experiment descriptors for each YOLOv8-based thesis model.
 - `src/app.py` - main video-processing loop.
 - `src/config.py` - typed application configuration loader.
 - `src/detectors/` - detector interface, factory, and YOLOv8 implementation.
@@ -87,11 +89,11 @@ Current default runtime configuration:
 ```yaml
 detector:
   family: yolov8
-  variant: default
-  weights_path: yolo11n.pt
+  variant: baseline
+  weights_path: yolov8n.pt
 ```
 
-This means the application will try to run immediately with the local `yolo11n.pt` weights if they are available in the project root.
+This means the application uses `yolov8n.pt` as the default pretrained baseline, which is a reasonable choice for edge-oriented and resource-constrained deployment scenarios.
 
 ## Configuration
 
@@ -122,22 +124,27 @@ logic:
 ### Important parameters
 
 - `video_source` - webcam index or path to a video file.
-- `detector.variant` - active YOLOv8 backbone variant.
-- `detector.weights_path` - path to the trained model weights.
+- `detector.variant` - active model configuration: `baseline`, `mobilenetv3`, or `mobilenetv4`.
+- `detector.weights_path` - path to the selected model weights.
 - `logic.abandon_threshold` - time in seconds before an unattended object is considered abandoned.
 - `logic.dist_threshold` - distance threshold used to associate a nearby person with an item.
 
-## YOLOv8 Backbone Comparison
+## Thesis Model Setup
 
-This project is structured for a fair thesis comparison of YOLOv8 with different backbones. The recommended experimental setup is:
+This project is structured for a fair thesis comparison of lightweight `YOLOv8`-based models.
 
-1. Keep the detector family fixed as `YOLOv8`.
-2. Change only the backbone:
-   - `default`
-   - `MobileNetV3`
-   - `MobileNetV4`
-3. Train all variants on the same dataset split.
-4. Evaluate them under the same conditions.
+The recommended setup is:
+
+1. Use `YOLOv8n pretrained` as the official baseline model.
+2. Implement and train `YOLOv8 + MobileNetV3`.
+3. Implement and train `YOLOv8 + MobileNetV4`.
+4. Evaluate all models on the same dataset split and under the same runtime conditions.
+
+This setup is methodologically appropriate because:
+
+- all models remain in the same detector family;
+- the baseline is a real official pretrained model from Ultralytics;
+- the comparison is aligned with deployment on low-resource devices.
 
 ### Recommended evaluation metrics
 
@@ -161,9 +168,9 @@ For the abandoned-object task, it is also useful to report:
 
 ## Experiment Files
 
-Each YOLOv8 variant has a separate experiment descriptor:
+Each thesis model has a separate experiment descriptor:
 
-- `configs/models/yolov8_default.yaml`
+- `configs/models/yolov8_baseline.yaml`
 - `configs/models/yolov8_mobilenetv3.yaml`
 - `configs/models/yolov8_mobilenetv4.yaml`
 
@@ -187,13 +194,16 @@ At the moment, this script validates whether each model configuration is ready t
 
 ## Weights
 
-For a full thesis comparison, you should prepare separate trained weights for:
+The current baseline model is:
 
-- `artifacts/weights/yolov8_default.pt`
+- `yolov8n.pt` - official pretrained YOLOv8n weights
+
+For the full thesis comparison, you should additionally prepare custom trained weights for:
+
 - `artifacts/weights/yolov8_mobilenetv3.pt`
 - `artifacts/weights/yolov8_mobilenetv4.pt`
 
-If a custom thesis weight file is missing, the detector loader will raise a clear error message. During development, you can temporarily point `weights_path` to an existing local model such as `yolo11n.pt`.
+If a custom thesis weight file is missing, the detector loader will raise a clear error message.
 
 ## Troubleshooting
 
@@ -205,7 +215,7 @@ Fix:
 
 - verify that the file exists;
 - update `detector.weights_path`;
-- or use a local fallback model such as `yolo11n.pt`.
+- check that the chosen variant matches the selected weight file.
 
 ### `ModuleNotFoundError: No module named 'yaml'`
 
@@ -235,4 +245,4 @@ to another device index such as `1`, or use a video file path instead.
 
 ## Thesis Note
 
-If this repository is used in an academic thesis, the most methodologically correct approach is to compare models within the same detector family and vary only the backbone. That is why this project is structured around `YOLOv8` variants rather than a mix of unrelated detector families.
+This repository intentionally uses `YOLOv8` as the research base, because it remains highly relevant, is well supported in practice, and is suitable for controlled backbone-level experimentation. The `YOLOv8n` pretrained model is used as the official lightweight baseline for comparison on constrained devices.
