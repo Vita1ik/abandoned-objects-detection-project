@@ -1,2 +1,17 @@
 __pycache__/
 *.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.DS_Store
+.ipynb_checkpoints/
+.venv/
+venv/
+env/
+env_py311/
+yolo_env/
+logs/
+artifacts/
+*.pt
+*.pth
+*.pb

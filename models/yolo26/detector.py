@@ -2,9 +2,9 @@ import cv2
 from ultralytics import YOLO
 
 class ObjectDetector:
-    def __init__(self, model_path="yolo11m.pt"):
+    def __init__(self):
         # Завантажуємо модель (YOLO11 або YOLO26)
-        self.model = YOLO(model_path)
+        self.model = YOLO("yolo26n.pt")
         # Класи, які нас цікавлять згідно з техзавданням
         self.target_classes = ['person', 'backpack', 'handbag', 'suitcase']
 

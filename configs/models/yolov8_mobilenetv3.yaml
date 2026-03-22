@@ -1,0 +1,6 @@
+name: yolov8_mobilenetv3
+family: yolov8
+variant: mobilenetv3
+backbone: mobilenetv3
+weights_path: artifacts/weights/yolov8_mobilenetv3.pt
+notes: YOLOv8 variant retrained with a MobileNetV3 backbone for lightweight deployment comparison.

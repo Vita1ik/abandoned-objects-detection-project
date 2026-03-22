@@ -1,0 +1,22 @@
+video_source: 0
+window_title: "Abandoned Object System - MSc Thesis Project"
+
+detector:
+  family: yolov8
+  variant: default
+  weights_path: yolo11n.pt
+  confidence: 0.25
+  iou: 0.45
+  tracker: bytetrack.yaml
+  persist_tracking: true
+  device: cpu
+  target_classes:
+    - person
+    - backpack
+    - handbag
+    - suitcase
+
+logic:
+  abandon_threshold: 5
+  dist_threshold: 160
+  fix_confirm_threshold: 0.7
