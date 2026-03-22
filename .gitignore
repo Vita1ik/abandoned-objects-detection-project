@@ -15,3 +15,5 @@ artifacts/
 *.pt
 *.pth
 *.pb
+data/raw/test_videos/*.mp4
+data/raw/test_videos/*.mov
