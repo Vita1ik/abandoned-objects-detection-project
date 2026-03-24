@@ -21,3 +21,14 @@ logic:
   abandon_threshold: 5
   dist_threshold: 160
   fix_confirm_threshold: 0.7
+
+preprocessing:
+  enabled: false
+  clahe_clip_limit: 2.0
+  clahe_tile_grid_size: 8
+  brightness_beta: 8
+  contrast_alpha: 1.08
+  gamma: 0.95
+
+runtime:
+  detect_every_n_frames: 1

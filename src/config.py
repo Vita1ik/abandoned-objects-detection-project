@@ -31,11 +31,28 @@ class LogicConfig:
 
 
 @dataclass(slots=True)
+class PreprocessingConfig:
+    enabled: bool = True
+    clahe_clip_limit: float = 2.0
+    clahe_tile_grid_size: int = 8
+    brightness_beta: int = 8
+    contrast_alpha: float = 1.08
+    gamma: float = 0.95
+
+
+@dataclass(slots=True)
+class RuntimeConfig:
+    detect_every_n_frames: int = 2
+
+
+@dataclass(slots=True)
 class AppConfig:
     video_source: int | str = 0
     window_title: str = "Abandoned Object System - MSc Thesis Project"
     detector: DetectorConfig = field(default_factory=DetectorConfig)
     logic: LogicConfig = field(default_factory=LogicConfig)
+    preprocessing: PreprocessingConfig = field(default_factory=PreprocessingConfig)
+    runtime: RuntimeConfig = field(default_factory=RuntimeConfig)
 
 
 def load_app_config(path: str | Path) -> AppConfig:
@@ -53,6 +70,8 @@ def load_app_config(path: str | Path) -> AppConfig:
         ),
         detector=_parse_detector_config(raw.get("detector", {})),
         logic=_parse_logic_config(raw.get("logic", {})),
+        preprocessing=_parse_preprocessing_config(raw.get("preprocessing", {})),
+        runtime=_parse_runtime_config(raw.get("runtime", {})),
     )
 
 
@@ -81,4 +100,21 @@ def _parse_logic_config(raw: dict[str, Any]) -> LogicConfig:
         abandon_threshold=int(raw.get("abandon_threshold", 5)),
         dist_threshold=int(raw.get("dist_threshold", 160)),
         fix_confirm_threshold=float(raw.get("fix_confirm_threshold", 0.7)),
+    )
+
+
+def _parse_preprocessing_config(raw: dict[str, Any]) -> PreprocessingConfig:
+    return PreprocessingConfig(
+        enabled=bool(raw.get("enabled", True)),
+        clahe_clip_limit=float(raw.get("clahe_clip_limit", 2.0)),
+        clahe_tile_grid_size=int(raw.get("clahe_tile_grid_size", 8)),
+        brightness_beta=int(raw.get("brightness_beta", 8)),
+        contrast_alpha=float(raw.get("contrast_alpha", 1.08)),
+        gamma=float(raw.get("gamma", 0.95)),
+    )
+
+
+def _parse_runtime_config(raw: dict[str, Any]) -> RuntimeConfig:
+    return RuntimeConfig(
+        detect_every_n_frames=max(1, int(raw.get("detect_every_n_frames", 2))),
     )

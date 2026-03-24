@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import cv2
+import numpy as np
 
 from src.config import AppConfig, load_app_config
 from src.detectors.factory import build_detector
@@ -21,19 +22,64 @@ def _run_with_config(config: AppConfig) -> None:
         dist_threshold=config.logic.dist_threshold,
         fix_confirm_threshold=config.logic.fix_confirm_threshold,
     )
+    frame_index = 0
+    last_detections = []
 
     while cap.isOpened():
         ret, frame = cap.read()
         if not ret:
             break
 
-        detections = detector.detect_and_track(frame)
-        obj_states = logic.process_frame_logic(detections)
-        draw_detections_with_logic(frame, detections, obj_states)
+        processed_frame = _preprocess_frame(frame, config)
+        should_detect = frame_index % config.runtime.detect_every_n_frames == 0
+        if should_detect:
+            last_detections = detector.detect_and_track(processed_frame)
 
-        cv2.imshow(config.window_title, frame)
+        detections = [dict(detection) for detection in last_detections]
+        obj_states = logic.process_frame_logic(detections)
+        draw_detections_with_logic(processed_frame, detections, obj_states)
+
+        cv2.imshow(config.window_title, processed_frame)
         if cv2.waitKey(1) & 0xFF == 27:
             break
 
+        frame_index += 1
+
     cap.release()
     cv2.destroyAllWindows()
+
+
+def _preprocess_frame(frame, config: AppConfig):
+    if not config.preprocessing.enabled:
+        return frame
+
+    enhanced = frame.copy()
+
+    lab = cv2.cvtColor(enhanced, cv2.COLOR_BGR2LAB)
+    l_channel, a_channel, b_channel = cv2.split(lab)
+    clahe = cv2.createCLAHE(
+        clipLimit=config.preprocessing.clahe_clip_limit,
+        tileGridSize=(
+            config.preprocessing.clahe_tile_grid_size,
+            config.preprocessing.clahe_tile_grid_size,
+        ),
+    )
+    l_channel = clahe.apply(l_channel)
+    enhanced = cv2.cvtColor(
+        cv2.merge((l_channel, a_channel, b_channel)),
+        cv2.COLOR_LAB2BGR,
+    )
+
+    enhanced = cv2.convertScaleAbs(
+        enhanced,
+        alpha=config.preprocessing.contrast_alpha,
+        beta=config.preprocessing.brightness_beta,
+    )
+
+    gamma = max(config.preprocessing.gamma, 0.01)
+    inv_gamma = 1.0 / gamma
+    table = np.array(
+        [((i / 255.0) ** inv_gamma) * 255 for i in range(256)],
+        dtype=np.uint8,
+    )
+    return cv2.LUT(enhanced, table)
