@@ -24,8 +24,10 @@ The main goals of this project are:
 ```text
 .
 ├── main.py
+├── train.py
 ├── config.yaml
 ├── configs/
+│   ├── architectures/
 │   └── models/
 ├── experiments/
 │   └── compare_backbones.py
@@ -45,7 +47,9 @@ The main goals of this project are:
 
 - `main.py` - application entry point.
 - `config.yaml` - runtime configuration for inference.
+- `train.py` - training entry point for custom YOLOv8 backbone experiments.
 - `configs/models/` - experiment descriptors for each YOLOv8-based thesis model.
+- `configs/architectures/` - custom Ultralytics model YAML files.
 - `src/app.py` - main video-processing loop.
 - `src/config.py` - typed application configuration loader.
 - `src/detectors/` - detector interface, factory, and YOLOv8 implementation.
@@ -177,6 +181,75 @@ Each thesis model has a separate experiment descriptor:
 - `configs/models/yolov8_mobilenetv4.yaml`
 
 These files describe which model variant is used and where its weights are expected to be stored.
+
+## MobileNetV3 Training Workflow
+
+The repository now includes an initial `YOLOv8 + MobileNetV3` training scaffold based on the official Ultralytics `TorchVision` backbone approach.
+
+Key files:
+
+- `configs/models/yolov8_mobilenetv3.yaml`
+- `configs/models/yolov8_mobilenetv3_lite.yaml`
+- `configs/architectures/yolov8_mobilenetv3.yaml`
+- `configs/architectures/yolov8_mobilenetv3_lite.yaml`
+- `train.py`
+
+### Step 1. Verify that the architecture builds
+
+Run a dry-run first:
+
+```bash
+python train.py --model-config configs/models/yolov8_mobilenetv3.yaml --dry-run
+```
+
+This checks whether the current environment can initialize the custom MobileNetV3-based model.
+
+If you want to test a lighter edge-oriented version first, use:
+
+```bash
+python train.py --model-config configs/models/yolov8_mobilenetv3_lite.yaml --dry-run
+```
+
+### Step 2. Train on your dataset
+
+After the dry-run succeeds, train with your dataset:
+
+```bash
+python train.py \
+  --model-config configs/models/yolov8_mobilenetv3.yaml \
+  --data path/to/data.yaml \
+  --epochs 100 \
+  --imgsz 640 \
+  --batch 8 \
+  --device 0
+```
+
+### Step 3. Export the trained weights into this project
+
+After training, place the best checkpoint at:
+
+```text
+artifacts/weights/yolov8_mobilenetv3.pt
+```
+
+For the lighter variant, use:
+
+```text
+artifacts/weights/yolov8_mobilenetv3_lite.pt
+```
+
+Then update `config.yaml` to run inference with:
+
+```yaml
+detector:
+  family: yolov8
+  variant: mobilenetv3
+  weights_path: artifacts/weights/yolov8_mobilenetv3.pt
+```
+
+### Important note
+
+The MobileNetV3 architecture file is an initial implementation scaffold. Because custom `TorchVision` backbones in Ultralytics depend on exact feature-map indexing, the first required step is always the dry-run build check in a real environment with `ultralytics`, `torch`, and `torchvision` installed.
 
 ## Running the Comparison Scaffold
 

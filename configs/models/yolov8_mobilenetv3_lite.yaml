@@ -1,0 +1,11 @@
+name: yolov8_mobilenetv3_lite
+family: yolov8
+variant: mobilenetv3
+backbone: mobilenetv3
+architecture_path: configs/architectures/yolov8_mobilenetv3_lite.yaml
+weights_path: artifacts/weights/yolov8_mobilenetv3_lite.pt
+pretrained_backbone: true
+bootstrap_weights: null
+default_imgsz: 512
+default_batch: 4
+notes: Lighter YOLOv8 + TorchVision MobileNetV3-Large variant with a reduced neck/head for faster edge inference.

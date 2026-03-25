@@ -2,5 +2,9 @@ name: yolov8_mobilenetv3
 family: yolov8
 variant: mobilenetv3
 backbone: mobilenetv3
+architecture_path: configs/architectures/yolov8_mobilenetv3.yaml
 weights_path: artifacts/weights/yolov8_mobilenetv3.pt
-notes: Custom YOLOv8 variant with a MobileNetV3 backbone for lightweight deployment comparison.
+pretrained_backbone: true
+bootstrap_weights: null
+default_imgsz: 640
+notes: Custom YOLOv8 variant with a TorchVision MobileNetV3-Large backbone for lightweight deployment comparison.
