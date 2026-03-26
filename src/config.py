@@ -43,6 +43,8 @@ class PreprocessingConfig:
 @dataclass(slots=True)
 class RuntimeConfig:
     detect_every_n_frames: int = 2
+    show_performance_stats: bool = True
+    performance_window_size: int = 30
 
 
 @dataclass(slots=True)
@@ -117,4 +119,6 @@ def _parse_preprocessing_config(raw: dict[str, Any]) -> PreprocessingConfig:
 def _parse_runtime_config(raw: dict[str, Any]) -> RuntimeConfig:
     return RuntimeConfig(
         detect_every_n_frames=max(1, int(raw.get("detect_every_n_frames", 2))),
+        show_performance_stats=bool(raw.get("show_performance_stats", True)),
+        performance_window_size=max(1, int(raw.get("performance_window_size", 30))),
     )

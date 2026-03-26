@@ -32,3 +32,5 @@ preprocessing:
 
 runtime:
   detect_every_n_frames: 1
+  show_performance_stats: true
+  performance_window_size: 30

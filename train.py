@@ -22,9 +22,21 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--epochs", type=int, default=100, help="Training epochs.")
     parser.add_argument("--imgsz", type=int, default=None, help="Training image size.")
     parser.add_argument("--batch", type=int, default=8, help="Training batch size.")
+    parser.add_argument(
+        "--fraction",
+        type=float,
+        default=1.0,
+        help="Fraction of the dataset to use, e.g. 0.1 for 10%% of the data.",
+    )
     parser.add_argument("--device", default="cpu", help="Training device, e.g. cpu, 0, 0,1.")
     parser.add_argument("--project", default="runs/train", help="Ultralytics project directory.")
     parser.add_argument("--name", default=None, help="Optional Ultralytics run name.")
+    parser.add_argument(
+        "--val",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="Run validation during training. Disable for faster smoke tests on large datasets.",
+    )
     parser.add_argument(
         "--dry-run",
         action="store_true",
@@ -95,9 +107,11 @@ def main() -> None:
         "epochs": args.epochs,
         "imgsz": imgsz,
         "batch": args.batch,
+        "fraction": args.fraction,
         "device": args.device,
         "project": args.project,
         "name": run_name,
+        "val": args.val,
     }
 
     bootstrap_weights = descriptor.get("bootstrap_weights")

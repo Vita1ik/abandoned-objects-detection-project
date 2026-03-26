@@ -44,3 +44,31 @@ def _build_label(detection: dict, status: str, obj_info: dict) -> str:
     if wait_time is not None and status == "unattended":
         parts.append(f"{wait_time}s")
     return " | ".join(parts)
+
+
+def draw_performance_stats(frame, stats: dict[str, float]) -> None:
+    lines = [
+        f"FPS: {stats['fps']:.1f}",
+        f"Frame: {stats['frame_ms']:.1f} ms",
+        f"Detect: {stats['detect_ms']:.1f} ms",
+    ]
+
+    x = 10
+    y = 24
+    line_height = 22
+    width = 220
+    height = 12 + line_height * len(lines)
+
+    cv2.rectangle(frame, (x - 6, y - 18), (x + width, y - 18 + height), (30, 30, 30), -1)
+    cv2.rectangle(frame, (x - 6, y - 18), (x + width, y - 18 + height), (120, 120, 120), 1)
+
+    for index, line in enumerate(lines):
+        cv2.putText(
+            frame,
+            line,
+            (x, y + index * line_height),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.6,
+            (255, 255, 255),
+            2,
+        )
