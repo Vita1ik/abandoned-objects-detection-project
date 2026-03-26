@@ -251,6 +251,45 @@ detector:
 
 The MobileNetV3 architecture file is an initial implementation scaffold. Because custom `TorchVision` backbones in Ultralytics depend on exact feature-map indexing, the first required step is always the dry-run build check in a real environment with `ultralytics`, `torch`, and `torchvision` installed.
 
+## MobileNetV4 Training Workflow
+
+The repository now also includes an initial `YOLOv8 + MobileNetV4` scaffold based on a `timm` MobileNetV4 backbone registered into the Ultralytics YAML pipeline at runtime.
+
+Key files:
+
+- `configs/models/yolov8_mobilenetv4.yaml`
+- `configs/architectures/yolov8_mobilenetv4.yaml`
+- `src/training/custom_backbones.py`
+- `train.py`
+
+### Step 1. Install `timm`
+
+```bash
+pip install timm
+```
+
+### Step 2. Verify that the architecture builds
+
+```bash
+python train.py --model-config configs/models/yolov8_mobilenetv4.yaml --dry-run
+```
+
+### Step 3. Train on your dataset
+
+```bash
+python train.py \
+  --model-config configs/models/yolov8_mobilenetv4.yaml \
+  --data path/to/data.yaml \
+  --epochs 100 \
+  --imgsz 512 \
+  --batch 4 \
+  --device 0
+```
+
+### Important note
+
+The MobileNetV4 scaffold uses a projected `timm` feature extractor. Because the selected feature-map indices are still an engineering starting point, you should always dry-run the architecture first and then validate training behavior with a short smoke test before longer runs.
+
 ## Running the Comparison Scaffold
 
 You can run the experiment scaffold with:

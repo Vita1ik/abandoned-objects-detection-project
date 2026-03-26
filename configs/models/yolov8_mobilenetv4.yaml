@@ -2,5 +2,10 @@ name: yolov8_mobilenetv4
 family: yolov8
 variant: mobilenetv4
 backbone: mobilenetv4
+architecture_path: configs/architectures/yolov8_mobilenetv4.yaml
 weights_path: artifacts/weights/yolov8_mobilenetv4.pt
-notes: Custom YOLOv8 variant with a MobileNetV4 backbone for the thesis comparison.
+pretrained_backbone: true
+bootstrap_weights: null
+default_imgsz: 512
+default_batch: 4
+notes: Custom YOLOv8 variant with a timm MobileNetV4-Conv-Medium backbone for the thesis comparison.

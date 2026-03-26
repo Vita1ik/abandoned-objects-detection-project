@@ -8,6 +8,7 @@ from ultralytics import YOLO
 from src.config import DetectorConfig
 from src.detectors.base import BaseDetector
 from src.domain import Detection
+from src.training.custom_backbones import register_ultralytics_custom_backbones
 
 
 MODEL_VARIANTS = {
@@ -39,6 +40,7 @@ class YoloV8Detector(BaseDetector):
                 f"Unsupported YOLOv8 variant '{config.variant}'. Supported variants: {supported}"
             )
 
+        register_ultralytics_custom_backbones(self.variant)
         self.model = YOLO(self._resolve_model_source(config))
         self.target_classes = set(config.target_classes)
         self.target_class_ids = self._resolve_target_class_ids()

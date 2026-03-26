@@ -5,6 +5,8 @@ from pathlib import Path
 
 import yaml
 
+from src.training.custom_backbones import register_ultralytics_custom_backbones
+
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
@@ -67,7 +69,7 @@ def resolve_model_source(descriptor: dict) -> str:
     raise ValueError("Model descriptor must define architecture_path, bootstrap_weights, or weights_path.")
 
 
-def build_model(model_source: str):
+def build_model(model_source: str, descriptor: dict):
     try:
         from ultralytics import YOLO
     except ImportError as exc:  # pragma: no cover - environment-specific guidance
@@ -76,6 +78,7 @@ def build_model(model_source: str):
             "Install project dependencies first with `pip install -r requirements.txt`."
         ) from exc
 
+    register_ultralytics_custom_backbones(descriptor.get("variant"))
     return YOLO(model_source)
 
 
@@ -83,7 +86,7 @@ def main() -> None:
     args = parse_args()
     descriptor = load_model_descriptor(args.model_config)
     model_source = resolve_model_source(descriptor)
-    model = build_model(model_source)
+    model = build_model(model_source, descriptor)
 
     if args.dry_run:
         print("Dry-run model initialization succeeded.")
