@@ -1,0 +1,11 @@
+name: yolov8_ghostnetv2
+family: yolov8
+variant: ghostnetv2
+backbone: ghostnetv2
+architecture_path: configs/architectures/yolov8_ghostnetv2.yaml
+weights_path: artifacts/weights/yolov8_ghostnetv2.pt
+pretrained_backbone: false
+bootstrap_weights: null
+default_imgsz: 512
+default_batch: 4
+notes: Custom YOLOv8 variant with a timm GhostNetV2 backbone for lightweight thesis comparison. The scaffold defaults to offline backbone initialization for repeatable dry-run checks.

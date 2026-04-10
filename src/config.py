@@ -10,11 +10,11 @@ import yaml
 @dataclass(slots=True)
 class DetectorConfig:
     family: str = "yolov8"
-    variant: str = "baseline"
-    weights_path: str | None = None
+    variant: str = "mobilenetv3"
+    weights_path: str | None = "runs/detect/runs/train/yolov8_mobilenetv3_lite2/weights/best.pt"
     confidence: float = 0.25
     iou: float = 0.45
-    image_size: int = 640
+    image_size: int = 512
     tracker: str = "bytetrack.yaml"
     persist_tracking: bool = True
     device: str = "cpu"
@@ -80,11 +80,14 @@ def load_app_config(path: str | Path) -> AppConfig:
 def _parse_detector_config(raw: dict[str, Any]) -> DetectorConfig:
     return DetectorConfig(
         family=raw.get("family", "yolov8"),
-        variant=raw.get("variant", "baseline"),
-        weights_path=raw.get("weights_path"),
+        variant=raw.get("variant", "mobilenetv3"),
+        weights_path=raw.get(
+            "weights_path",
+            "runs/detect/runs/train/yolov8_mobilenetv3_lite2/weights/best.pt",
+        ),
         confidence=float(raw.get("confidence", 0.25)),
         iou=float(raw.get("iou", 0.45)),
-        image_size=int(raw.get("image_size", 640)),
+        image_size=int(raw.get("image_size", 512)),
         tracker=raw.get("tracker", "bytetrack.yaml"),
         persist_tracking=bool(raw.get("persist_tracking", True)),
         device=raw.get("device", "cpu"),

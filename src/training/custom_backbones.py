@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import warnings
 from typing import Iterable
 
 import torch
@@ -26,19 +27,34 @@ class TimmFeatureBackbone(nn.Module):
             import timm
         except ImportError as exc:  # pragma: no cover - environment-specific guidance
             raise ImportError(
-                "The timm package is required for MobileNetV4 backbones. "
+                "The timm package is required for timm-based backbones such as MobileNetV4 and GhostNetV2. "
                 "Install it with `pip install timm` in the active environment."
             ) from exc
 
         self.split = split
         self.out_indices = tuple(int(index) for index in out_indices)
         pretrained = str(weights).upper() != "NONE"
-        self.m = timm.create_model(
-            model,
-            pretrained=pretrained,
-            features_only=True,
-            out_indices=self.out_indices,
-        )
+        try:
+            self.m = timm.create_model(
+                model,
+                pretrained=pretrained,
+                features_only=True,
+                out_indices=self.out_indices,
+            )
+        except Exception as exc:
+            if not pretrained:
+                raise
+            warnings.warn(
+                f"Falling back to randomly initialized '{model}' backbone because pretrained "
+                f"weights could not be loaded: {exc}",
+                RuntimeWarning,
+            )
+            self.m = timm.create_model(
+                model,
+                pretrained=False,
+                features_only=True,
+                out_indices=self.out_indices,
+            )
 
         feature_channels = list(self.m.feature_info.channels())
         if proj_channels is None:
@@ -67,7 +83,7 @@ class TimmFeatureBackbone(nn.Module):
 def register_ultralytics_custom_backbones(variant: str | None = None) -> None:
     """Register project-specific backbones for Ultralytics YAML parsing."""
 
-    if (variant or "").lower() != "mobilenetv4":
+    if (variant or "").lower() not in {"mobilenetv4", "ghostnetv2"}:
         return
 
     import ultralytics.nn.tasks as tasks

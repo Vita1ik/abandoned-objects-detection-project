@@ -93,11 +93,11 @@ Current default runtime configuration:
 ```yaml
 detector:
   family: yolov8
-  variant: baseline
-  weights_path: yolov8s.pt
+  variant: mobilenetv3
+  weights_path: artifacts/weights/yolov8_mobilenetv3_lite.pt
 ```
 
-This means the application uses `yolov8s.pt` as the default pretrained baseline, giving better detection quality while still remaining practical for constrained deployment scenarios.
+This means the application uses the lighter `YOLOv8 + MobileNetV3 Lite` configuration by default for runtime inference.
 
 ## Configuration
 
@@ -112,10 +112,10 @@ window_title: "Abandoned Object System - MSc Thesis Project"
 detector:
   family: yolov8
   variant: mobilenetv3
-  weights_path: artifacts/weights/yolov8_mobilenetv3.pt
+  weights_path: artifacts/weights/yolov8_mobilenetv3_lite.pt
   confidence: 0.25
   iou: 0.45
-  image_size: 640
+  image_size: 512
   tracker: bytetrack.yaml
   persist_tracking: true
   device: cpu
@@ -179,6 +179,7 @@ Each thesis model has a separate experiment descriptor:
 - `configs/models/yolov8_baseline.yaml`
 - `configs/models/yolov8_mobilenetv3.yaml`
 - `configs/models/yolov8_mobilenetv4.yaml`
+- `configs/models/yolov8_ghostnetv2.yaml`
 
 These files describe which model variant is used and where its weights are expected to be stored.
 
@@ -244,7 +245,7 @@ Then update `config.yaml` to run inference with:
 detector:
   family: yolov8
   variant: mobilenetv3
-  weights_path: artifacts/weights/yolov8_mobilenetv3.pt
+  weights_path: artifacts/weights/yolov8_mobilenetv3_lite.pt
 ```
 
 ### Important note
@@ -290,6 +291,35 @@ python train.py \
 
 The MobileNetV4 scaffold uses a projected `timm` feature extractor. Because the selected feature-map indices are still an engineering starting point, you should always dry-run the architecture first and then validate training behavior with a short smoke test before longer runs.
 
+## GhostNetV2 Training Workflow
+
+The repository also includes an initial `YOLOv8 + GhostNetV2` scaffold built through the same `timm` integration path as the MobileNetV4 variant.
+
+Key files:
+
+- `configs/models/yolov8_ghostnetv2.yaml`
+- `configs/architectures/yolov8_ghostnetv2.yaml`
+- `src/training/custom_backbones.py`
+- `train.py`
+
+Dry-run build check:
+
+```bash
+python train.py --model-config configs/models/yolov8_ghostnetv2.yaml --dry-run
+```
+
+Smoke-train example:
+
+```bash
+python train.py \
+  --model-config configs/models/yolov8_ghostnetv2.yaml \
+  --data path/to/data.yaml \
+  --epochs 3 \
+  --imgsz 512 \
+  --batch 4 \
+  --device 0
+```
+
 ## Running the Comparison Scaffold
 
 You can run the experiment scaffold with:
@@ -314,6 +344,7 @@ The current baseline model is:
 
 For the full thesis comparison, you should additionally prepare custom trained weights for:
 
+- `artifacts/weights/yolov8_mobilenetv3_lite.pt`
 - `artifacts/weights/yolov8_mobilenetv3.pt`
 - `artifacts/weights/yolov8_mobilenetv4.pt`
 

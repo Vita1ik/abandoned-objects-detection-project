@@ -27,6 +27,11 @@ MODEL_VARIANTS = {
         "weights_path": "artifacts/weights/yolov8_mobilenetv4.pt",
         "thesis_role": "latest mobile backbone comparison model",
     },
+    "ghostnetv2": {
+        "description": "YOLOv8 detector with a GhostNetV2 backbone trained separately for comparison.",
+        "weights_path": "artifacts/weights/yolov8_ghostnetv2.pt",
+        "thesis_role": "lightweight ghost-module comparison model",
+    },
 }
 
 

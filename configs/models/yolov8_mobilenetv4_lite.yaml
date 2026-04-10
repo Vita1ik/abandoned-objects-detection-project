@@ -1,0 +1,11 @@
+name: yolov8_mobilenetv4_lite
+family: yolov8
+variant: mobilenetv4
+backbone: mobilenetv4
+architecture_path: configs/architectures/yolov8_mobilenetv4_lite.yaml
+weights_path: artifacts/weights/yolov8_mobilenetv4_lite.pt
+pretrained_backbone: true
+bootstrap_weights: null
+default_imgsz: 512
+default_batch: 4
+notes: Lightweight YOLOv8 + timm MobileNetV4-Conv-Small variant with a reduced neck/head for faster edge inference.
