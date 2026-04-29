@@ -8,4 +8,24 @@ pretrained_backbone: true
 bootstrap_weights: null
 default_imgsz: 512
 default_batch: 4
-notes: Lighter YOLOv8 + TorchVision MobileNetV3-Large variant with a reduced neck/head for faster edge inference.
+train_overrides:
+  optimizer: Adam
+  lr0: 0.0027586986748117047
+  lrf: 0.11465640647739864
+  weight_decay: 0.0006612658646612707
+  momentum: 0.8524795616268962
+  warmup_epochs: 2.1742508365045983
+  box: 9.665440364437337
+  cls: 0.43033450352296265
+  dfl: 1.4540362888980227
+  hsv_h: 0.0003087674144370367
+  hsv_s: 0.44097295564859834
+  hsv_v: 0.5413549242801476
+  degrees: 1.274034664069657
+  translate: 0.03818249672071006
+  scale: 0.3141915784487018
+  fliplr: 0.06084844859190755
+  mosaic: 0.30990257265289517
+  mixup: 0.06479175279631737
+  copy_paste: 0.058245828039608386
+notes: Lighter YOLOv8 + TorchVision MobileNetV3-Large variant with a reduced neck/head for faster edge inference. The default training overrides store the current Optuna-best MobileNetV3 Lite hyperparameters for reuse.

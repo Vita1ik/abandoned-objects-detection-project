@@ -84,20 +84,32 @@ def merge_dataset(dataset_root: Path, output_root: Path, class_order: list[str])
         if source_key not in data_yaml:
             continue
 
-        image_dir = resolve_split_path(dataset_root, data_yaml[source_key])
-        if not image_dir.exists():
+        split_ref = data_yaml[source_key]
+        split_path = resolve_split_path(dataset_root, split_ref)
+        if not split_path.exists():
             continue
 
-        label_dir = infer_label_dir(image_dir)
-        merge_split(
-            dataset_prefix=dataset_prefix,
-            image_dir=image_dir,
-            label_dir=label_dir,
-            output_root=output_root,
-            output_split=output_split,
-            class_id_map=class_id_map,
-            stats=stats[output_split],
-        )
+        if split_path.is_file():
+            merge_split_from_list(
+                dataset_root=dataset_root,
+                dataset_prefix=dataset_prefix,
+                split_list_path=split_path,
+                output_root=output_root,
+                output_split=output_split,
+                class_id_map=class_id_map,
+                stats=stats[output_split],
+            )
+        else:
+            label_dir = infer_label_dir(split_path)
+            merge_split(
+                dataset_prefix=dataset_prefix,
+                image_dir=split_path,
+                label_dir=label_dir,
+                output_root=output_root,
+                output_split=output_split,
+                class_id_map=class_id_map,
+                stats=stats[output_split],
+            )
 
     return stats
 
@@ -181,6 +193,66 @@ def merge_split(
         stats["boxes"] += len(converted_lines)
         if not converted_lines:
             stats["backgrounds"] += 1
+
+
+def merge_split_from_list(
+    dataset_root: Path,
+    dataset_prefix: str,
+    split_list_path: Path,
+    output_root: Path,
+    output_split: str,
+    class_id_map: dict[int, int],
+    stats: Counter,
+) -> None:
+    output_images = output_root / "images" / output_split
+    output_labels = output_root / "labels" / output_split
+    split_name = split_list_path.stem
+
+    image_paths = [
+        resolve_listed_image_path(dataset_root, line)
+        for line in split_list_path.read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    ]
+
+    for image_path in image_paths:
+        if not image_path.exists():
+            continue
+
+        output_name = f"{dataset_prefix}__{image_path.name}"
+        label_path = resolve_listed_label_path(dataset_root, split_name, image_path)
+        converted_lines = convert_label_file(label_path, class_id_map)
+
+        shutil.copy2(image_path, output_images / output_name)
+        (output_labels / f"{Path(output_name).stem}.txt").write_text(
+            "\n".join(converted_lines) + ("\n" if converted_lines else ""),
+            encoding="utf-8",
+        )
+
+        stats["images"] += 1
+        stats["boxes"] += len(converted_lines)
+        if not converted_lines:
+            stats["backgrounds"] += 1
+
+
+def resolve_listed_image_path(dataset_root: Path, listed_path: str) -> Path:
+    candidate = Path(listed_path)
+    if candidate.is_absolute():
+        return candidate
+    return (dataset_root / candidate).resolve()
+
+
+def resolve_listed_label_path(dataset_root: Path, split_name: str, image_path: Path) -> Path:
+    stem = image_path.stem
+    candidates = [
+        dataset_root / "labels" / split_name / f"{stem}.txt",
+        dataset_root / "labels" / split_name.capitalize() / f"{stem}.txt",
+        dataset_root / "labels" / split_name.lower() / f"{stem}.txt",
+        dataset_root / "labels" / split_name.upper() / f"{stem}.txt",
+    ]
+    for candidate in candidates:
+        if candidate.exists():
+            return candidate
+    return candidates[0]
 
 
 def convert_label_file(label_path: Path, class_id_map: dict[int, int]) -> list[str]:

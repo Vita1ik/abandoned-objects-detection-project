@@ -14,7 +14,7 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--model-config",
-        default="configs/models/yolov8_mobilenetv3.yaml",
+        default="configs/models/yolov8_mobilenetv3_lite.yaml",
         help="Path to the experiment descriptor YAML.",
     )
     parser.add_argument(
@@ -23,7 +23,7 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--epochs", type=int, default=100, help="Training epochs.")
     parser.add_argument("--imgsz", type=int, default=None, help="Training image size.")
-    parser.add_argument("--batch", type=int, default=8, help="Training batch size.")
+    parser.add_argument("--batch", type=int, default=None, help="Training batch size.")
     parser.add_argument(
         "--fraction",
         type=float,
@@ -103,19 +103,31 @@ def main() -> None:
         raise SystemExit("Training requires --data path to a valid Ultralytics data.yaml file.")
 
     imgsz = args.imgsz or int(descriptor.get("default_imgsz", 640))
+    batch = args.batch or int(descriptor.get("default_batch", 8))
     run_name = args.name or descriptor.get("name", "mobilenetv3_experiment")
+    train_overrides = dict(descriptor.get("train_overrides", {}))
 
     train_kwargs = {
         "data": args.data,
         "epochs": args.epochs,
         "imgsz": imgsz,
-        "batch": args.batch,
+        "batch": batch,
         "fraction": args.fraction,
         "device": args.device,
         "project": args.project,
         "name": run_name,
         "val": args.val,
     }
+    train_kwargs.update(train_overrides)
+    train_kwargs["data"] = args.data
+    train_kwargs["epochs"] = args.epochs
+    train_kwargs["imgsz"] = imgsz
+    train_kwargs["batch"] = batch
+    train_kwargs["fraction"] = args.fraction
+    train_kwargs["device"] = args.device
+    train_kwargs["project"] = args.project
+    train_kwargs["name"] = run_name
+    train_kwargs["val"] = args.val
 
     bootstrap_weights = descriptor.get("bootstrap_weights")
     if bootstrap_weights:

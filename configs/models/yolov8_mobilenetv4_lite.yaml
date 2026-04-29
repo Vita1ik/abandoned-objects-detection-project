@@ -8,4 +8,24 @@ pretrained_backbone: true
 bootstrap_weights: null
 default_imgsz: 512
 default_batch: 4
-notes: Lightweight YOLOv8 + timm MobileNetV4-Conv-Small variant with a reduced neck/head for faster edge inference.
+train_overrides:
+  optimizer: AdamW
+  lr0: 0.000769506259520658
+  lrf: 0.16668015605761224
+  weight_decay: 0.0018737598432676753
+  momentum: 0.9146717878493169
+  warmup_epochs: 1.9138413075201122
+  box: 7.341852399022343
+  cls: 0.4052699079536471
+  dfl: 1.308106745617721
+  hsv_h: 0.009177793420835691
+  hsv_s: 0.19882285122821464
+  hsv_v: 0.33146509184084816
+  degrees: 2.19817105976215
+  translate: 0.06560699842170359
+  scale: 0.5140703845572054
+  fliplr: 0.03993475643167195
+  mosaic: 0.35711721920680584
+  mixup: 0.08886218532930637
+  copy_paste: 0.009290082543999545
+notes: Lightweight YOLOv8 + timm MobileNetV4-Conv-Small variant with a reduced neck/head for faster edge inference. The default training overrides store the current Optuna-best MobileNetV4 Lite hyperparameters for reuse.

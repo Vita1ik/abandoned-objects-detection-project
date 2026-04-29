@@ -13,6 +13,7 @@ numpy>=1.23.0
 matplotlib>=3.7.0
 pandas
 scipy
+optuna>=4.0.0
 
 # Для трекінгу об'єктів
 deep_sort_realtime==1.3.2
