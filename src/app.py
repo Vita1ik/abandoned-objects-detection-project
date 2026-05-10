@@ -1,7 +1,8 @@
 from __future__ import annotations
 
+from concurrent.futures import Future, ThreadPoolExecutor
 from collections import deque
-from time import perf_counter
+from time import perf_counter, sleep
 
 import cv2
 import numpy as np
@@ -29,39 +30,60 @@ def _run_with_config(config: AppConfig) -> None:
     last_detections = []
     frame_times_ms: deque[float] = deque(maxlen=config.runtime.performance_window_size)
     detect_times_ms: deque[float] = deque(maxlen=config.runtime.performance_window_size)
+    detect_future: Future[tuple[list[dict], float]] | None = None
+    target_frame_interval_s = _resolve_target_frame_interval(cap, config.video_source)
+    next_frame_deadline = perf_counter()
 
-    while cap.isOpened():
-        frame_start = perf_counter()
-        ret, frame = cap.read()
-        if not ret:
-            break
+    with ThreadPoolExecutor(max_workers=1) as executor:
+        while cap.isOpened():
+            if target_frame_interval_s is not None:
+                now = perf_counter()
+                if now < next_frame_deadline:
+                    sleep(next_frame_deadline - now)
 
-        processed_frame = _preprocess_frame(frame, config)
-        should_detect = frame_index % config.runtime.detect_every_n_frames == 0
-        detect_time_ms = 0.0
-        if should_detect:
-            detect_start = perf_counter()
-            last_detections = detector.detect_and_track(processed_frame)
-            detect_time_ms = (perf_counter() - detect_start) * 1000.0
-            detect_times_ms.append(detect_time_ms)
+            frame_start = perf_counter()
+            ret, frame = cap.read()
+            if not ret:
+                break
 
-        detections = [dict(detection) for detection in last_detections]
-        obj_states = logic.process_frame_logic(detections)
-        draw_detections_with_logic(processed_frame, detections, obj_states)
+            processed_frame = _preprocess_frame(frame, config)
+            detect_time_ms = 0.0
 
-        frame_time_ms = (perf_counter() - frame_start) * 1000.0
-        frame_times_ms.append(frame_time_ms)
-        if config.runtime.show_performance_stats:
-            draw_performance_stats(
-                processed_frame,
-                _build_performance_stats(frame_times_ms, detect_times_ms, detect_time_ms),
-            )
+            if detect_future is not None and detect_future.done():
+                last_detections, detect_time_ms = detect_future.result()
+                detect_times_ms.append(detect_time_ms)
+                detect_future = None
 
-        cv2.imshow(config.window_title, processed_frame)
-        if cv2.waitKey(1) & 0xFF == 27:
-            break
+            should_detect = frame_index % config.runtime.detect_every_n_frames == 0
+            if should_detect and detect_future is None:
+                detect_future = executor.submit(
+                    _detect_frame,
+                    detector,
+                    processed_frame.copy(),
+                )
 
-        frame_index += 1
+            detections = [dict(detection) for detection in last_detections]
+            obj_states = logic.process_frame_logic(detections)
+            draw_detections_with_logic(processed_frame, detections, obj_states)
+
+            frame_time_ms = (perf_counter() - frame_start) * 1000.0
+            frame_times_ms.append(frame_time_ms)
+            if config.runtime.show_performance_stats:
+                draw_performance_stats(
+                    processed_frame,
+                    _build_performance_stats(frame_times_ms, detect_times_ms, detect_time_ms),
+                )
+
+            cv2.imshow(config.window_title, processed_frame)
+            if cv2.waitKey(1) & 0xFF == 27:
+                break
+
+            frame_index += 1
+            if target_frame_interval_s is not None:
+                next_frame_deadline = max(
+                    next_frame_deadline + target_frame_interval_s,
+                    perf_counter(),
+                )
 
     cap.release()
     cv2.destroyAllWindows()
@@ -101,6 +123,24 @@ def _preprocess_frame(frame, config: AppConfig):
         dtype=np.uint8,
     )
     return cv2.LUT(enhanced, table)
+
+
+def _detect_frame(detector, frame) -> tuple[list[dict], float]:
+    detect_start = perf_counter()
+    detections = detector.detect_and_track(frame)
+    detect_time_ms = (perf_counter() - detect_start) * 1000.0
+    return detections, detect_time_ms
+
+
+def _resolve_target_frame_interval(cap, video_source) -> float | None:
+    if isinstance(video_source, int):
+        return None
+
+    fps = cap.get(cv2.CAP_PROP_FPS)
+    if fps <= 1e-3:
+        return None
+
+    return 1.0 / fps
 
 
 def _build_performance_stats(
