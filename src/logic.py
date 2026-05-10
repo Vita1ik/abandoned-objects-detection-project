@@ -156,6 +156,20 @@ class AbandonedLogic:
             return None
 
         current_owner_id = item_state.get("owner_id")
+        time_since_owner = current_time - item_state.get("last_seen_with_owner", current_time)
+
+        # Do not let a passerby become the new owner once the item has already
+        # been left unattended. This preserves the abandoned-state timer instead
+        # of resetting it whenever another person walks close to the item.
+        if (
+            current_owner_id is not None
+            and current_owner_id != nearest_owner_id
+            and time_since_owner > self.owner_grace_period
+        ):
+            item_state["candidate_owner_id"] = None
+            item_state["candidate_owner_since"] = None
+            return None
+
         if current_owner_id is None or current_owner_id == nearest_owner_id:
             item_state["candidate_owner_id"] = None
             item_state["candidate_owner_since"] = None
