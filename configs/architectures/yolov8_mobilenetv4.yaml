@@ -1,6 +1,4 @@
 # Initial YOLOv8 detection scaffold with a timm MobileNetV4-Conv-Medium backbone.
-# The backbone uses projected intermediate feature maps so the neck/head wiring
-# remains stable even if the native MobileNetV4 stage widths differ.
 
 nc: 80
 depth_multiple: 0.67
