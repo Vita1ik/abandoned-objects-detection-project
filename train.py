@@ -25,6 +25,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--imgsz", type=int, default=None, help="Training image size.")
     parser.add_argument("--batch", type=int, default=None, help="Training batch size.")
     parser.add_argument(
+        "--workers",
+        type=int,
+        default=4,
+        help="Number of dataloader worker processes used for loading training data.",
+    )
+    parser.add_argument(
         "--fraction",
         type=float,
         default=1.0,
@@ -112,6 +118,7 @@ def main() -> None:
         "epochs": args.epochs,
         "imgsz": imgsz,
         "batch": batch,
+        "workers": args.workers,
         "fraction": args.fraction,
         "device": args.device,
         "project": args.project,
@@ -123,6 +130,7 @@ def main() -> None:
     train_kwargs["epochs"] = args.epochs
     train_kwargs["imgsz"] = imgsz
     train_kwargs["batch"] = batch
+    train_kwargs["workers"] = args.workers
     train_kwargs["fraction"] = args.fraction
     train_kwargs["device"] = args.device
     train_kwargs["project"] = args.project
