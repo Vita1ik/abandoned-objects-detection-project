@@ -48,15 +48,16 @@ def _build_label(detection: dict, status: str, obj_info: dict) -> str:
 
 def draw_performance_stats(frame, stats: dict[str, float]) -> None:
     lines = [
-        f"FPS: {stats['fps']:.1f}",
-        f"Frame: {stats['frame_ms']:.1f} ms",
-        f"Detect: {stats['detect_ms']:.1f} ms",
+        f"Display FPS: {stats['display_fps']:.1f}",
+        f"Display: {stats['display_ms']:.1f} ms",
+        f"Loop: {stats['loop_ms']:.1f} ms",
+        f"Detect: {stats['detect_ms']:.1f} ms ({stats['detect_fps']:.1f} FPS)",
     ]
 
     x = 10
     y = 24
     line_height = 22
-    width = 220
+    width = 320
     height = 12 + line_height * len(lines)
 
     cv2.rectangle(frame, (x - 6, y - 18), (x + width, y - 18 + height), (30, 30, 30), -1)

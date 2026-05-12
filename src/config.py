@@ -13,6 +13,7 @@ class DetectorConfig:
     variant: str = "mobilenetv3"
     weights_path: str | None = "runs/detect/runs/train/yolov8_mobilenetv3_lite2/weights/best.pt"
     confidence: float = 0.25
+    person_confidence: float = 0.45
     iou: float = 0.45
     image_size: int = 512
     tracker: str = "bytetrack.yaml"
@@ -48,9 +49,15 @@ class RuntimeConfig:
 
 
 @dataclass(slots=True)
+class WindowConfig:
+    scale: float = 1.0
+
+
+@dataclass(slots=True)
 class AppConfig:
     video_source: int | str = 0
     window_title: str = "Abandoned Object System - MSc Thesis Project"
+    window: WindowConfig = field(default_factory=WindowConfig)
     detector: DetectorConfig = field(default_factory=DetectorConfig)
     logic: LogicConfig = field(default_factory=LogicConfig)
     preprocessing: PreprocessingConfig = field(default_factory=PreprocessingConfig)
@@ -70,6 +77,7 @@ def load_app_config(path: str | Path) -> AppConfig:
         window_title=raw.get(
             "window_title", "Abandoned Object System - MSc Thesis Project"
         ),
+        window=_parse_window_config(raw.get("window", {})),
         detector=_parse_detector_config(raw.get("detector", {})),
         logic=_parse_logic_config(raw.get("logic", {})),
         preprocessing=_parse_preprocessing_config(raw.get("preprocessing", {})),
@@ -86,6 +94,7 @@ def _parse_detector_config(raw: dict[str, Any]) -> DetectorConfig:
             "runs/detect/runs/train/yolov8_mobilenetv3_lite2/weights/best.pt",
         ),
         confidence=float(raw.get("confidence", 0.25)),
+        person_confidence=float(raw.get("person_confidence", 0.45)),
         iou=float(raw.get("iou", 0.45)),
         image_size=int(raw.get("image_size", 512)),
         tracker=raw.get("tracker", "bytetrack.yaml"),
@@ -124,4 +133,10 @@ def _parse_runtime_config(raw: dict[str, Any]) -> RuntimeConfig:
         detect_every_n_frames=max(1, int(raw.get("detect_every_n_frames", 2))),
         show_performance_stats=bool(raw.get("show_performance_stats", True)),
         performance_window_size=max(1, int(raw.get("performance_window_size", 30))),
+    )
+
+
+def _parse_window_config(raw: dict[str, Any]) -> WindowConfig:
+    return WindowConfig(
+        scale=max(0.1, float(raw.get("scale", 1.0))),
     )

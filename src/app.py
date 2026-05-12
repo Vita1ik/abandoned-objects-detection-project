@@ -20,6 +20,7 @@ def run_application(config_path: str = "config.yaml") -> None:
 
 def _run_with_config(config: AppConfig) -> None:
     cap = cv2.VideoCapture(config.video_source)
+    cv2.namedWindow(config.window_title, cv2.WINDOW_NORMAL)
     detector = build_detector(config.detector)
     logic = AbandonedLogic(
         abandon_threshold=config.logic.abandon_threshold,
@@ -28,11 +29,13 @@ def _run_with_config(config: AppConfig) -> None:
     )
     frame_index = 0
     last_detections = []
-    frame_times_ms: deque[float] = deque(maxlen=config.runtime.performance_window_size)
+    loop_times_ms: deque[float] = deque(maxlen=config.runtime.performance_window_size)
+    display_intervals_ms: deque[float] = deque(maxlen=config.runtime.performance_window_size)
     detect_times_ms: deque[float] = deque(maxlen=config.runtime.performance_window_size)
     detect_future: Future[tuple[list[dict], float]] | None = None
     target_frame_interval_s = _resolve_target_frame_interval(cap, config.video_source)
     next_frame_deadline = perf_counter()
+    last_presented_at: float | None = None
 
     with ThreadPoolExecutor(max_workers=1) as executor:
         while cap.isOpened():
@@ -47,6 +50,8 @@ def _run_with_config(config: AppConfig) -> None:
                 break
 
             processed_frame = _preprocess_frame(frame, config)
+            display_size = _resolve_display_size(processed_frame, config)
+            cv2.resizeWindow(config.window_title, *display_size)
             detect_time_ms = 0.0
 
             if detect_future is not None and detect_future.done():
@@ -66,15 +71,29 @@ def _run_with_config(config: AppConfig) -> None:
             obj_states = logic.process_frame_logic(detections)
             draw_detections_with_logic(processed_frame, detections, obj_states)
 
-            frame_time_ms = (perf_counter() - frame_start) * 1000.0
-            frame_times_ms.append(frame_time_ms)
+            loop_time_ms = (perf_counter() - frame_start) * 1000.0
+            loop_times_ms.append(loop_time_ms)
             if config.runtime.show_performance_stats:
+                presented_at = perf_counter()
+                if last_presented_at is not None:
+                    display_intervals_ms.append((presented_at - last_presented_at) * 1000.0)
+                last_presented_at = presented_at
                 draw_performance_stats(
                     processed_frame,
-                    _build_performance_stats(frame_times_ms, detect_times_ms, detect_time_ms),
+                    _build_performance_stats(
+                        display_intervals_ms,
+                        loop_times_ms,
+                        detect_times_ms,
+                        detect_time_ms,
+                    ),
                 )
 
-            cv2.imshow(config.window_title, processed_frame)
+            display_frame = cv2.resize(
+                processed_frame,
+                display_size,
+                interpolation=cv2.INTER_LINEAR,
+            )
+            cv2.imshow(config.window_title, display_frame)
             if cv2.waitKey(1) & 0xFF == 27:
                 break
 
@@ -143,20 +162,35 @@ def _resolve_target_frame_interval(cap, video_source) -> float | None:
     return 1.0 / fps
 
 
+def _resolve_display_size(frame, config: AppConfig) -> tuple[int, int]:
+    frame_height, frame_width = frame.shape[:2]
+    scale = config.window.scale
+    width = max(1, int(frame_width * scale))
+    height = max(1, int(frame_height * scale))
+    return width, height
+
+
 def _build_performance_stats(
-    frame_times_ms: deque[float],
+    display_intervals_ms: deque[float],
+    loop_times_ms: deque[float],
     detect_times_ms: deque[float],
     current_detect_time_ms: float,
 ) -> dict[str, float]:
-    avg_frame_ms = sum(frame_times_ms) / len(frame_times_ms) if frame_times_ms else 0.0
+    avg_display_ms = (
+        sum(display_intervals_ms) / len(display_intervals_ms) if display_intervals_ms else 0.0
+    )
+    avg_loop_ms = sum(loop_times_ms) / len(loop_times_ms) if loop_times_ms else 0.0
     avg_detect_ms = (
         sum(detect_times_ms) / len(detect_times_ms)
         if detect_times_ms
         else current_detect_time_ms
     )
-    fps = 1000.0 / avg_frame_ms if avg_frame_ms > 0 else 0.0
+    display_fps = 1000.0 / avg_display_ms if avg_display_ms > 0 else 0.0
+    detect_fps = 1000.0 / avg_detect_ms if avg_detect_ms > 0 else 0.0
     return {
-        "fps": fps,
-        "frame_ms": avg_frame_ms,
+        "display_fps": display_fps,
+        "display_ms": avg_display_ms,
+        "loop_ms": avg_loop_ms,
         "detect_ms": avg_detect_ms,
+        "detect_fps": detect_fps,
     }
