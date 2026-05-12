@@ -13,6 +13,8 @@ from src.training.custom_backbones import register_ultralytics_custom_backbones
 
 
 DEFAULT_BASELINE_DESCRIPTOR = Path("configs/models/yolov8_baseline.yaml")
+DEFAULT_MOBILENETV3_DESCRIPTOR = Path("configs/models/yolov8_mobilenetv3.yaml")
+DEFAULT_MOBILENETV4_DESCRIPTOR = Path("configs/models/yolov8_mobilenetv4.yaml")
 DEFAULT_DATA_PATH = Path("data/main_dataset/data.yaml")
 DEFAULT_OUTPUT_DIR = Path("runs/eval")
 
@@ -29,12 +31,37 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--config",
         default="config.yaml",
-        help="Path to the runtime config that defines the comparison model.",
+        help="Path to the runtime config used for default device and image size.",
     )
     parser.add_argument(
         "--baseline-descriptor",
         default=str(DEFAULT_BASELINE_DESCRIPTOR),
         help="Path to the baseline model descriptor YAML.",
+    )
+    parser.add_argument(
+        "--mobilenetv3-descriptor",
+        default=str(DEFAULT_MOBILENETV3_DESCRIPTOR),
+        help="Path to the MobileNetV3 model descriptor YAML.",
+    )
+    parser.add_argument(
+        "--mobilenetv4-descriptor",
+        default=str(DEFAULT_MOBILENETV4_DESCRIPTOR),
+        help="Path to the MobileNetV4 model descriptor YAML.",
+    )
+    parser.add_argument(
+        "--baseline-weights",
+        default=None,
+        help="Override path to baseline weights.",
+    )
+    parser.add_argument(
+        "--mobilenetv3-weights",
+        default=None,
+        help="Override path to MobileNetV3 weights.",
+    )
+    parser.add_argument(
+        "--mobilenetv4-weights",
+        default=None,
+        help="Override path to MobileNetV4 weights.",
     )
     parser.add_argument(
         "--split",
@@ -70,6 +97,20 @@ def load_yaml(path: str | Path) -> dict[str, Any]:
     yaml_path = Path(path)
     with yaml_path.open("r", encoding="utf-8") as fh:
         return yaml.safe_load(fh) or {}
+
+
+def resolve_model_source(
+    descriptor: dict[str, Any],
+    override_weights: str | None,
+    label: str,
+) -> str:
+    model_source = override_weights or descriptor.get("weights_path")
+    if not model_source:
+        raise SystemExit(
+            f"{label} has no weights_path configured. "
+            "Pass an explicit weights path via the command line."
+        )
+    return str(model_source)
 
 
 def load_yolo(model_source: str, variant: str):
@@ -207,44 +248,56 @@ def main() -> None:
 
     config = load_app_config(args.config)
     baseline_descriptor = load_yaml(args.baseline_descriptor)
-
-    baseline_source = str(baseline_descriptor.get("weights_path", "yolov8s.pt"))
-    baseline_variant = str(baseline_descriptor.get("variant", "baseline"))
-
-    current_source = str(config.detector.weights_path or "")
-    if not current_source:
-        raise SystemExit(
-            "Current comparison model has no weights_path in config.yaml. "
-            "Set detector.weights_path first."
-        )
+    mobilenetv3_descriptor = load_yaml(args.mobilenetv3_descriptor)
+    mobilenetv4_descriptor = load_yaml(args.mobilenetv4_descriptor)
 
     imgsz = args.imgsz or int(config.detector.image_size)
     device = args.device or str(config.detector.device)
     project = str(Path(args.project))
 
+    models = [
+        {
+            "label": "baseline",
+            "variant": str(baseline_descriptor.get("variant", "baseline")),
+            "model_source": resolve_model_source(
+                baseline_descriptor,
+                args.baseline_weights,
+                "Baseline model",
+            ),
+        },
+        {
+            "label": "mobilenetv3",
+            "variant": str(mobilenetv3_descriptor.get("variant", "mobilenetv3")),
+            "model_source": resolve_model_source(
+                mobilenetv3_descriptor,
+                args.mobilenetv3_weights,
+                "MobileNetV3 model",
+            ),
+        },
+        {
+            "label": "mobilenetv4",
+            "variant": str(mobilenetv4_descriptor.get("variant", "mobilenetv4")),
+            "model_source": resolve_model_source(
+                mobilenetv4_descriptor,
+                args.mobilenetv4_weights,
+                "MobileNetV4 model",
+            ),
+        },
+    ]
+
     results = [
         evaluate_model(
-            label="baseline",
-            model_source=baseline_source,
-            variant=baseline_variant,
+            label=model["label"],
+            model_source=model["model_source"],
+            variant=model["variant"],
             data_path=str(data_path),
             split=args.split,
             imgsz=imgsz,
             device=device,
             project=project,
-            run_name=f"{args.name}_baseline",
-        ),
-        evaluate_model(
-            label=config.detector.variant,
-            model_source=current_source,
-            variant=config.detector.variant,
-            data_path=str(data_path),
-            split=args.split,
-            imgsz=imgsz,
-            device=device,
-            project=project,
-            run_name=f"{args.name}_{config.detector.variant}",
-        ),
+            run_name=f"{args.name}_{model['label']}",
+        )
+        for model in models
     ]
 
     summary_path = save_summary(
