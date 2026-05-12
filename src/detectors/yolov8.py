@@ -79,6 +79,8 @@ class YoloV8Detector(BaseDetector):
             class_name = self.model.names[cls_idx]
             if class_name not in self.target_classes:
                 continue
+            if class_name == "person" and float(conf) < self.config.person_confidence:
+                continue
 
             stable_class = self._stabilize_class(
                 track_id=int(obj_id),
