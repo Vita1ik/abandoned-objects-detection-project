@@ -40,6 +40,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--project", default="runs/train", help="Ultralytics project directory.")
     parser.add_argument("--name", default=None, help="Optional Ultralytics run name.")
     parser.add_argument(
+        "--resume",
+        default=None,
+        help="Path to a YOLO checkpoint (.pt) to resume training from.",
+    )
+    parser.add_argument(
         "--val",
         action=argparse.BooleanOptionalAction,
         default=True,
@@ -92,12 +97,18 @@ def main() -> None:
     args = parse_args()
     descriptor = load_model_descriptor(args.model_config)
     model_source = resolve_model_source(descriptor)
-    model = build_model(model_source, descriptor)
+    resume_path = None
+    if args.resume:
+        resume_path = Path(args.resume)
+        if not resume_path.is_file():
+            raise SystemExit(f"Resume checkpoint not found: {resume_path}")
+
+    model = build_model(str(resume_path) if resume_path else model_source, descriptor)
 
     if args.dry_run:
         print("Dry-run model initialization succeeded.")
         print(f"Experiment descriptor: {descriptor['_path']}")
-        print(f"Model source: {model_source}")
+        print(f"Model source: {resume_path or model_source}")
         print(f"Variant: {descriptor.get('variant', 'unknown')}")
         print(
             "Next step: run training with a valid --data path once the architecture "
@@ -136,9 +147,11 @@ def main() -> None:
     train_kwargs["project"] = args.project
     train_kwargs["name"] = run_name
     train_kwargs["val"] = args.val
+    if resume_path:
+        train_kwargs["resume"] = str(resume_path)
 
     bootstrap_weights = descriptor.get("bootstrap_weights")
-    if bootstrap_weights:
+    if bootstrap_weights and not resume_path:
         model = model.load(bootstrap_weights)
 
     model.train(**train_kwargs)
