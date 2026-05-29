@@ -1,3 +1,12 @@
+# Тема роботи 
+ДОСЛІДЖЕННЯ МЕТОДІВ ГЛИБИННОГО НАВЧАННЯ ДЛЯ ВИРІШЕННЯ ЗАДАЧІ ВИЯВЛЕННЯ ЗАЛИШЕНИХ ОБʼЄКТІВ ДЛЯ СИСТЕМ ВІДЕОСПОСТЕРЕЖЕННЯ
+
+# ПІБ Автора 
+Пастух Віталій-Олександр Петрович
+
+# Імʼя та посада наукового керівника
+Дейнеко Анастасія Олександрівна, доцент, к.т.н, доцент
+
 # Abandoned Objects Detection Project
 
 This project is a diploma-oriented computer vision system for abandoned object detection in video streams. It is designed not only as a demo application, but also as an experimental framework for comparing `YOLOv8` with different backbone choices for resource-constrained devices.
@@ -8,7 +17,7 @@ The current thesis logic is based on three model groups:
 - `YOLOv8 + MobileNetV3`
 - `YOLOv8 + MobileNetV4`
 
-The repository includes a unified runtime pipeline, configurable detector selection, abandoned-object logic, visualization utilities, and a scaffold for backbone comparison experiments.
+The repository includes a unified runtime pipeline, configurable detector selection, abandoned-object logic, visualization utilities.
 
 ## Objectives
 
@@ -29,8 +38,6 @@ The main goals of this project are:
 ├── configs/
 │   ├── architectures/
 │   └── models/
-├── experiments/
-│   └── compare_backbones.py
 ├── models/
 ├── src/
 │   ├── app.py
@@ -39,7 +46,6 @@ The main goals of this project are:
 │   ├── detectors/
 │   ├── logic.py
 │   └── visualization/
-├── tests/
 └── README.md
 ```
 
@@ -55,7 +61,6 @@ The main goals of this project are:
 - `src/detectors/` - detector interface, factory, and YOLOv8 implementation.
 - `src/logic.py` - state machine for attended, unattended, and abandoned objects.
 - `src/visualization/` - drawing and annotation helpers.
-- `experiments/compare_backbones.py` - scaffold for checking experiment readiness and generating a comparison CSV.
 
 ## Installation
 
@@ -135,65 +140,6 @@ logic:
 - `logic.abandon_threshold` - time in seconds before an unattended object is considered abandoned.
 - `logic.dist_threshold` - distance threshold used to associate a nearby person with an item.
 
-## Thesis Model Setup
-
-This project is structured for a fair thesis comparison of lightweight `YOLOv8`-based models.
-
-The recommended setup is:
-
-1. Use `YOLOv8s pretrained` as the official baseline model.
-2. Implement and train `YOLOv8 + MobileNetV3`.
-3. Implement and train `YOLOv8 + MobileNetV4`.
-4. Evaluate all models on the same dataset split and under the same runtime conditions.
-
-This setup is methodologically appropriate because:
-
-- all models remain in the same detector family;
-- the baseline is a real official pretrained model from Ultralytics;
-- the comparison is aligned with deployment on low-resource devices.
-
-### Recommended evaluation metrics
-
-- `mAP@0.5`
-- `mAP@0.5:0.95`
-- precision
-- recall
-- F1-score
-- FPS
-- latency per frame
-- model size
-- parameter count
-- memory usage
-
-For the abandoned-object task, it is also useful to report:
-
-- abandoned event detection accuracy;
-- false alarm rate;
-- average time to a correct alarm;
-- missed abandoned-object events.
-
-## Experiment Files
-
-Each thesis model has a separate experiment descriptor:
-
-- `configs/models/yolov8_baseline.yaml`
-- `configs/models/yolov8_mobilenetv3.yaml`
-- `configs/models/yolov8_mobilenetv4.yaml`
-- `configs/models/yolov8_ghostnetv2.yaml`
-
-These files describe which model variant is used and where its weights are expected to be stored.
-
-## MobileNetV3 Training Workflow
-
-The repository now includes an initial `YOLOv8 + MobileNetV3` training scaffold based on the official Ultralytics `TorchVision` backbone approach.
-
-Key files:
-
-- `configs/models/yolov8_mobilenetv3.yaml`
-- `configs/models/yolov8_mobilenetv3_lite.yaml`
-- `configs/architectures/yolov8_mobilenetv3.yaml`
-- `configs/architectures/yolov8_mobilenetv3_lite.yaml`
-- `train.py`
 
 ### Step 1. Verify that the architecture builds
 
